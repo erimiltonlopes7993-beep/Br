@@ -1,0 +1,679 @@
+local LP = game:GetService("Players").LocalPlayer
+local RS = game:GetService("ReplicatedStorage")
+local UIS = game:GetService("UserInputService")
+local TS = game:GetService("TweenService")
+
+local SG = Instance.new("ScreenGui")
+SG.Name = "ModMenuUI"
+SG.Parent = LP:WaitForChild("PlayerGui")
+SG.ResetOnSpawn = false
+
+local Main = Instance.new("Frame")
+Main.Size = UDim2.new(0, 280, 0, 450)
+Main.Position = UDim2.new(0.5, -140, 0.5, -225)
+Main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Parent = SG
+
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 12)
+Corner.Parent = Main
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Thickness = 2
+Stroke.Color = Color3.fromRGB(60, 60, 60)
+Stroke.Parent = Main
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.Text = "BRAINROT MOD MENU"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+Title.Font = Enum.Font.GothamBold
+Title.Parent = Main
+
+local TabContainer = Instance.new("Frame")
+TabContainer.Size = UDim2.new(1, 0, 0, 35)
+TabContainer.Position = UDim2.new(0, 0, 0, 35)
+TabContainer.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+TabContainer.BorderSizePixel = 0
+TabContainer.Parent = Main
+
+local TabLayout = Instance.new("UIListLayout")
+TabLayout.Parent = TabContainer
+TabLayout.FillDirection = Enum.FillDirection.Horizontal
+TabLayout.Padding = UDim.new(0, 2)
+
+local function CreateTab(name)
+    local Tab = Instance.new("TextButton")
+    Tab.Size = UDim2.new(0, 65, 0, 33)
+    Tab.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Tab.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Tab.Text = name
+    Tab.Font = Enum.Font.GothamBold
+    Tab.TextSize = 10
+    Tab.Parent = TabContainer
+    Tab.AutoButtonColor = false
+    Instance.new("UICorner", Tab).CornerRadius = UDim.new(0, 4)
+    return Tab
+end
+
+local TabMain = CreateTab("Main")
+local TabBuy = CreateTab("Buy ALL")
+local TabConfig = CreateTab("Config")
+
+local Scrolling = Instance.new("ScrollingFrame")
+Scrolling.Size = UDim2.new(1, 0, 1, -70)
+Scrolling.Position = UDim2.new(0, 0, 0, 70)
+Scrolling.BackgroundTransparency = 1
+Scrolling.CanvasSize = UDim2.new(0, 0, 0, 1200)
+Scrolling.ScrollBarThickness = 2
+Scrolling.Parent = Main
+
+local Layout = Instance.new("UIListLayout")
+Layout.Parent = Scrolling
+Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+Layout.Padding = UDim.new(0, 5)
+
+local Toggles = {
+    ["Auto Collect"] = false,
+    ["Auto Plot Upgrade"] = false,
+    ["Auto Power"] = false,
+    ["Auto Carry"] = false,
+    ["Auto Reach"] = false,
+    ["Auto Mythic"] = false,
+    ["Auto Secret"] = false,
+    ["Auto Ancient"] = false,
+    ["Auto Divine"] = false,
+    ["Auto Rebirth"] = false,
+    ["Auto Sell Brainrots [Click]"] = false,
+    ["Auto Ice Emblem"] = false,
+    ["Auto Victrola"] = false,
+    ["Auto Star"] = false,
+    ["Auto Bat"] = false,
+    ["Anti AFK"] = false,
+    ["Anti Cheat"] = false,
+    ["Infinite Jump"] = false,
+    ["Enable Speed"] = false,
+    ["Fly"] = false,
+    ["Noclip"] = false,
+    ["Enable Shift Lock"] = false,
+    ["Auto Rejoin"] = false
+}
+
+local SellSettings = {
+    ["COMMON"] = false,
+    ["UNCOMMON"] = false,
+    ["RARE"] = false,
+    ["EPIC"] = false,
+    ["LEGENDARY"] = false,
+    ["MYTHIC"] = false
+}
+
+local TabContents = {
+    Main = {},
+    ["Buy ALL"] = {},
+    Config = {}
+}
+
+local CurrentTab = "Main"
+
+local function CreateSubToggle(rarity, parentFrame)
+    local Row = Instance.new("Frame")
+    Row.Size = UDim2.new(1, 0, 0, 30)
+    Row.BackgroundTransparency = 1
+    Row.Parent = parentFrame
+
+    local Lab = Instance.new("TextLabel")
+    Lab.Size = UDim2.new(0.7, 0, 1, 0)
+    Lab.Text = rarity
+    Lab.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Lab.Font = Enum.Font.Gotham
+    Lab.TextSize = 10
+    Lab.BackgroundTransparency = 1
+    Lab.TextXAlignment = Enum.TextXAlignment.Left
+    Lab.Parent = Row
+
+    local Box = Instance.new("TextButton")
+    Box.Size = UDim2.new(0, 24, 0, 24)
+    Box.Position = UDim2.new(1, -24, 0.5, -12)
+    Box.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    Box.Text = ""
+    Box.Parent = Row
+
+    local BC = Instance.new("UICorner")
+    BC.CornerRadius = UDim.new(0, 4)
+    BC.Parent = Box
+
+    Box.MouseButton1Click:Connect(function()
+        SellSettings[rarity] = not SellSettings[rarity]
+        Box.BackgroundColor3 = SellSettings[rarity] and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(80, 80, 80)
+    end)
+end
+
+local function CreateToggle(name, tabName)
+    local B = Instance.new("TextButton")
+    B.Size = UDim2.new(0.9, 0, 0, 38)
+    B.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    B.Text = name .. ": OFF"
+    B.TextColor3 = Color3.fromRGB(255, 255, 255)
+    B.Font = Enum.Font.GothamSemibold
+    B.TextSize = 12
+    B.Parent = Scrolling
+    B.Visible = (tabName == CurrentTab)
+    
+    local C = Instance.new("UICorner")
+    C.CornerRadius = UDim.new(0, 6)
+    C.Parent = B
+    
+    local SubFrame = nil
+    
+    B.MouseButton1Click:Connect(function()
+        if name == "Auto Sell Brainrots [Click]" then
+            if SubFrame then
+                SubFrame.Visible = not SubFrame.Visible
+                if SubFrame.Visible then
+                    B.Size = UDim2.new(0.9, 0, 0, 38)
+                    Scrolling.CanvasSize = Scrolling.CanvasSize + UDim2.new(0, 0, 0, 210)
+                else
+                    Scrolling.CanvasSize = Scrolling.CanvasSize - UDim2.new(0, 0, 0, 210)
+                end
+            end
+        end
+        Toggles[name] = not Toggles[name]
+        B.Text = name .. (Toggles[name] and ": ON" or ": OFF")
+        B.BackgroundColor3 = Toggles[name] and Color3.fromRGB(50, 180, 50) or Color3.fromRGB(180, 50, 50)
+    end)
+    
+    if name == "Auto Sell Brainrots [Click]" then
+        SubFrame = Instance.new("Frame")
+        SubFrame.Size = UDim2.new(0.9, 0, 0, 0)
+        SubFrame.Visible = false
+        SubFrame.BackgroundTransparency = 1
+        SubFrame.ClipsDescendants = true
+        SubFrame.Parent = Scrolling
+
+        local SubLayout = Instance.new("UIListLayout")
+        SubLayout.Parent = SubFrame
+        SubLayout.Padding = UDim.new(0, 5)
+
+        for rarity, _ in pairs(SellSettings) do
+            CreateSubToggle(rarity, SubFrame)
+        end
+        SubFrame.Size = UDim2.new(0.9, 0, 0, 210)
+    end
+    
+    table.insert(TabContents[tabName], B)
+    if SubFrame then
+        table.insert(TabContents[tabName], SubFrame)
+    end
+end
+
+local mainOrder = {"Auto Collect", "Auto Plot Upgrade", "Auto Power", "Auto Carry", "Auto Reach", "Auto Rebirth", "Auto Mythic", "Auto Secret", "Auto Ancient", "Auto Divine", "Auto Sell Brainrots [Click]"}
+for _, name in ipairs(mainOrder) do 
+    CreateToggle(name, "Main")
+end
+
+local buyOrder = {"Auto Ice Emblem", "Auto Victrola", "Auto Star"}
+for _, name in ipairs(buyOrder) do
+    CreateToggle(name, "Buy ALL")
+end
+
+local configOrder = {"Auto Bat", "Anti AFK", "Anti Cheat", "Infinite Jump", "Enable Speed", "Fly", "Noclip", "Enable Shift Lock", "Auto Rejoin"}
+for _, name in ipairs(configOrder) do
+    CreateToggle(name, "Config")
+end
+
+local function ShowTab(tabName)
+    CurrentTab = tabName
+    for tab, elements in pairs(TabContents) do
+        for _, elem in ipairs(elements) do
+            elem.Visible = (tab == tabName)
+        end
+    end
+end
+
+TabMain.MouseButton1Click:Connect(function()
+    TabMain.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    TabBuy.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    TabConfig.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    ShowTab("Main")
+end)
+
+TabBuy.MouseButton1Click:Connect(function()
+    TabMain.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    TabBuy.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    TabConfig.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    ShowTab("Buy ALL")
+end)
+
+TabConfig.MouseButton1Click:Connect(function()
+    TabMain.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    TabBuy.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    TabConfig.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    ShowTab("Config")
+end)
+
+TabMain.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+
+local dragging, dragInput, dragStart, startPos
+Main.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true dragStart = input.Position startPos = Main.Position
+        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+    end
+end)
+Main.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end)
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+local function GetMyPlot()
+    local Plots = workspace:FindFirstChild("Plots")
+    if not Plots then return nil end
+    for _, p in pairs(Plots:GetChildren()) do
+        if p:GetAttribute("OwnerUserID") == LP.UserId then return p end
+    end
+    return nil
+end
+
+local speedValue = 32
+local flySpeed = 32
+local isFlyActive = false
+local bg, bv
+
+UIS.JumpRequest:Connect(function()
+    if Toggles["Infinite Jump"] then
+        local char = LP.Character
+        if char then
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end
+end)
+
+local noclipEnabled = false
+local noclipParts = {}
+
+task.spawn(function()
+    local Knit = require(RS:WaitForChild("Packages"):WaitForChild("Knit"))
+    local PlotService = Knit.GetService("PlotService")
+    local StatService = Knit.GetService("StatUpgradeService")
+    local Calculations = require(RS:WaitForChild("Modules"):WaitForChild("Calculations"))
+
+    while task.wait(0.1) do
+        local CashValue = LP:WaitForChild("leaderstats"):WaitForChild("Cash")
+        local CurrentCash = CashValue:GetAttribute("CashAmount") or CashValue.Value or 0
+        local Character = LP.Character
+        local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+        local StatsFolder = LP:WaitForChild("updateStatsFolder")
+
+        if Toggles["Auto Rebirth"] then
+            pcall(function()
+                local currentRebirths = StatsFolder:WaitForChild("Rebirths").Value
+                local currentReach = StatsFolder:WaitForChild("Reach_Distance").Value
+                local reachNeeded = currentRebirths * 30 + 80
+                if currentReach >= reachNeeded and currentRebirths < 50 then
+                    StatService:Rebirth()
+                end
+            end)
+        end
+
+        if Toggles["Auto Sell Brainrots [Click]"] then
+            pcall(function()
+                local Backpack = LP:FindFirstChild("Backpack")
+                if Backpack then
+                    for _, tool in pairs(Backpack:GetChildren()) do
+                        local rarityLabel = tool:FindFirstChild("LevelBoard") and tool.LevelBoard:FindFirstChild("Frame") and tool.LevelBoard.Frame:FindFirstChild("Rarity")
+                        if rarityLabel and rarityLabel:IsA("TextLabel") then
+                            local rarityText = rarityLabel.Text:upper()
+                            for selRarity, isSelected in pairs(SellSettings) do
+                                if isSelected and rarityText:find(selRarity) then
+                                    LP.Character:WaitForChild("Humanoid"):EquipTool(tool)
+                                    RS.Remotes.SellBrainrot:FireServer("Single")
+                                    task.wait(0.05)
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+
+        if Toggles["Auto Collect"] then
+            pcall(function()
+                local myPlot = GetMyPlot()
+                if myPlot and myPlot:FindFirstChild("Pods") then
+                    for _, pod in pairs(myPlot.Pods:GetChildren()) do
+                        local collectable = pod:GetAttribute("CollectAmount") or 0
+                        if collectable > 0 then
+                            PlotService:CollectCash(pod)
+                            RS.Packages.Knit.Services.BrainrotService.RE.BrainrotCollected:FireServer(pod)
+                            local tp = pod:FindFirstChild("Touch Part")
+                            if tp then RS.Remotes.AnimateCollect:FireServer(collectable, tp) end
+                        end
+                    end
+                end
+            end)
+        end
+
+        local function GetMultiUpgradeCost(statName, currentLvl, amount)
+            local totalCost = 0
+            local tempLvl = currentLvl
+            local step = (statName == "Reach_Distance") and 5 or 1
+            for i = 1, amount do
+                totalCost = totalCost + Calculations.getNextUpgradeCost(statName, tempLvl)
+                tempLvl = tempLvl + step
+            end
+            return totalCost
+        end
+
+        local function HandleStatUpgrade(statName, toggleKey)
+            if not Toggles[toggleKey] then return end
+            pcall(function()
+                local currentLvl = StatsFolder:WaitForChild(statName).Value
+                if statName == "Power" or statName == "Reach_Distance" then
+                    local amounts = {50, 25, 5, 1}
+                    for _, amt in ipairs(amounts) do
+                        local cost = GetMultiUpgradeCost(statName, currentLvl, amt)
+                        if CurrentCash >= cost then StatService:Upgrade(statName, amt) break end
+                    end
+                else
+                    local cost = Calculations.getNextUpgradeCost(statName, currentLvl)
+                    if CurrentCash >= cost then StatService:Upgrade(statName, 1) end
+                end
+            end)
+        end
+
+        HandleStatUpgrade("Power", "Auto Power")
+        HandleStatUpgrade("GrabAmount", "Auto Carry")
+        HandleStatUpgrade("Reach_Distance", "Auto Reach")
+
+        pcall(function()
+            local ActiveBRs = workspace:FindFirstChild("ActiveBrainrots")
+            if ActiveBRs and Root then
+                for _, hitbox in pairs(ActiveBRs:GetChildren()) do
+                    if hitbox.Name == "ServerHitbox" then
+                        local model = hitbox:FindFirstChildOfClass("Model")
+                        if model then
+                            local rarityLabel = model:FindFirstChild("LevelBoard") and model.LevelBoard:FindFirstChild("Frame") and model.LevelBoard.Frame:FindFirstChild("Rarity")
+                            if rarityLabel and rarityLabel:IsA("TextLabel") then
+                                local txt = rarityLabel.Text:upper()
+                                local shouldTeleport = false
+                                if Toggles["Auto Mythic"] and txt:find("MYTHIC") then shouldTeleport = true
+                                elseif Toggles["Auto Secret"] and txt:find("SECRET") then shouldTeleport = true
+                                elseif Toggles["Auto Ancient"] and txt:find("ANCIENT") then shouldTeleport = true
+                                elseif Toggles["Auto Divine"] and txt:find("DIVINE") then shouldTeleport = true end
+
+                                if shouldTeleport then
+                                    Root.CFrame = hitbox.CFrame * CFrame.new(0, 3, 0)
+                                    task.wait(0.15)
+                                    local attach = hitbox:FindFirstChild("Attachment")
+                                    local prompt = attach and attach:FindFirstChild("ProximityPrompt")
+                                    if prompt and prompt.ActionText == "PICK UP" then
+                                        local oldHold = prompt.HoldDuration
+                                        prompt.HoldDuration = 0
+                                        prompt:InputHoldBegin()
+                                        prompt:InputHoldEnd()
+                                        prompt.HoldDuration = oldHold
+                                        
+                                        task.wait(0.2)
+                                        local myPlot = GetMyPlot()
+                                        if myPlot and myPlot:FindFirstChild("SpawnPart") then
+                                            Root.CFrame = myPlot.SpawnPart.CFrame * CFrame.new(0, 4, 0)
+                                        end
+                                    end
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if Toggles["Enable Speed"] then
+            local char = LP.Character
+            if char and char:FindFirstChild("Humanoid") then
+                char.Humanoid.WalkSpeed = speedValue
+            end
+        end
+
+        if isFlyActive and bg and bv then
+            local cam = workspace.CurrentCamera
+            local char = LP.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    local moveDir = hum.MoveDirection
+                    if moveDir.Magnitude > 0 then
+                        local camDir = cam.CFrame.LookVector
+                        local camRight = cam.CFrame.RightVector
+                        
+                        local flatLook = Vector3.new(camDir.X, 0, camDir.Z)
+                        if flatLook.Magnitude > 0.001 then
+                            flatLook = flatLook.Unit
+                        else
+                            flatLook = Vector3.new(cam.CFrame.UpVector.X, 0, cam.CFrame.UpVector.Z).Unit * -math.sign(camDir.Y)
+                        end
+                        
+                        local flatRight = Vector3.new(camRight.X, 0, camRight.Z)
+                        if flatRight.Magnitude > 0.001 then
+                            flatRight = flatRight.Unit
+                        else
+                            flatRight = Vector3.new(1, 0, 0)
+                        end
+                        
+                        local forwardInput = moveDir:Dot(flatLook)
+                        local rightInput = moveDir:Dot(flatRight)
+                        
+                        bv.Velocity = (camDir * forwardInput + camRight * rightInput) * flySpeed
+                    else
+                        bv.Velocity = Vector3.new(0, 0, 0)
+                    end
+                    bg.CFrame = cam.CFrame
+                end
+            end
+        end
+
+        if noclipEnabled then
+            local char = LP.Character
+            if char then
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if Toggles["Fly"] then
+            isFlyActive = true
+            local char = LP.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local root = char.HumanoidRootPart
+                if not root:FindFirstChild("FlyVel") then
+                    bv = Instance.new("BodyVelocity")
+                    bv.Name = "FlyVel"
+                    bv.Velocity = Vector3.new(0, 0, 0)
+                    bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+                    bv.Parent = root
+                end
+                if not root:FindFirstChild("FlyGyro") then
+                    bg = Instance.new("BodyGyro")
+                    bg.Name = "FlyGyro"
+                    bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+                    bg.CFrame = root.CFrame
+                    bg.Parent = root
+                end
+            end
+        else
+            isFlyActive = false
+            local char = LP.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local root = char.HumanoidRootPart
+                local vel = root:FindFirstChild("FlyVel")
+                local gyro = root:FindFirstChild("FlyGyro")
+                if vel then vel:Destroy() end
+                if gyro then gyro:Destroy() end
+                bv = nil
+                bg = nil
+            end
+        end
+
+        if Toggles["Noclip"] then
+            noclipEnabled = true
+        else
+            noclipEnabled = false
+            for part, canCollide in pairs(noclipParts) do
+                if part and part.Parent then
+                    part.CanCollide = canCollide
+                end
+            end
+            noclipParts = {}
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if Toggles["Anti AFK"] then
+            pcall(function()
+                game:GetService("VirtualUser"):CaptureController()
+                game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+            end)
+        end
+    end
+end)
+
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    if Toggles["Anti Cheat"] then
+        local method = getnamecallmethod()
+        if method == "FireServer" and tostring(self) == "Cheat" then
+            return nil
+        end
+    end
+    return oldNamecall(self, ...)
+end)
+
+task.spawn(function()
+    local AttackRemote = RS:WaitForChild("Remotes"):WaitForChild("Attack")
+    while task.wait(0.1) do
+        if Toggles["Auto Bat"] then
+            local char = LP.Character
+            if char then
+                local tool = char:FindFirstChildOfClass("Tool")
+                if tool and (tool.Name:find("Bat") or tool.Name:find("Hammer")) then
+                    pcall(function()
+                        local root = char:FindFirstChild("HumanoidRootPart")
+                        if root then
+                            local hitParams = OverlapParams.new()
+                            hitParams.FilterType = Enum.RaycastFilterType.Exclude
+                            hitParams.FilterDescendantsInstances = {char}
+
+                            local hitBoxCenter = root.CFrame * CFrame.new(0, 0, -3.5)
+                            local parts = workspace:GetPartBoundsInBox(hitBoxCenter, Vector3.new(7, 7, 7), hitParams)
+                            local targets = {}
+
+                            for _, part in ipairs(parts) do
+                                local model = part:FindFirstAncestorOfClass("Model")
+                                if model and model:FindFirstChild("Humanoid") and not table.find(targets, model) then
+                                    table.insert(targets, model)
+                                end
+                            end
+
+                            AttackRemote:InvokeServer("Bat", targets)
+                        end
+                    end)
+                end
+            end
+        end
+    end
+end)
+
+task.spawn(function()
+    local Bridge = RS:WaitForChild("Remotes"):WaitForChild("Bridge")
+    while task.wait(1) do
+        if Toggles["Auto Ice Emblem"] then
+            pcall(function() Bridge:FireServer("General", "Ingredients", "Purchase", "IceEmblem") end)
+        end
+        if Toggles["Auto Victrola"] then
+            pcall(function() Bridge:FireServer("General", "Ingredients", "Purchase", "Victrola") end)
+        end
+        if Toggles["Auto Star"] then
+            pcall(function() Bridge:FireServer("General", "Ingredients", "Purchase", "Star") end)
+        end
+    end
+end)
+
+task.spawn(function()
+    local TeleportService = game:GetService("TeleportService")
+    while task.wait(0.5) do
+        if Toggles["Auto Rejoin"] then
+            TeleportService:Teleport(game.PlaceId)
+        end
+    end
+end)
+
+local shiftLockEnabled = false
+local shiftLockActive = false
+local shiftLockConnection = nil
+
+task.spawn(function()
+    while task.wait(0.05) do
+        if Toggles["Enable Shift Lock"] and not shiftLockEnabled then
+            shiftLockEnabled = true
+            local char = LP.Character or LP.CharacterAdded:Wait()
+            local hum = char:WaitForChild("Humanoid")
+            local root = char:WaitForChild("HumanoidRootPart")
+            
+            hum.AutoRotate = false
+            shiftLockActive = true
+            
+            if shiftLockConnection then shiftLockConnection:Disconnect() end
+            shiftLockConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                if shiftLockActive and shiftLockEnabled then
+                    local camera = workspace.CurrentCamera
+                    local lookVector = camera.CFrame.LookVector
+                    local flatLook = Vector3.new(lookVector.X, 0, lookVector.Z)
+                    
+                    if flatLook.Magnitude > 0.001 then
+                        flatLook = flatLook.Unit
+                        root.CFrame = CFrame.lookAt(root.Position, root.Position + flatLook)
+                    end
+                end
+            end)
+        elseif not Toggles["Enable Shift Lock"] and shiftLockEnabled then
+            shiftLockEnabled = false
+            shiftLockActive = false
+            local char = LP.Character
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    hum.AutoRotate = true
+                end
+            end
+            if shiftLockConnection then
+                shiftLockConnection:Disconnect()
+                shiftLockConnection = nil
+            end
+        end
+    end
+end)
